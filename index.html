@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>GeoGuard-NER</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: #f4f6f8;
+}
+
+h1 {
+    text-align: center;
+}
+
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    box-sizing: border-box;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#warning {
+    margin-top: 15px;
+    padding: 15px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 12px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🌍 GeoGuard-NER</h1>
+
+<p style="text-align:center; font-size:18px; font-weight:bold;">
+AI-Powered Landslide Early Warning & Risk Detection System
+</p>
+
+<p style="text-align:center; color:#555;">
+🌧️ Environmental Monitoring | 🗺️ GIS Risk Mapping | 🚨 Early Warning
+</p>
+<div class="box">
+<h2>🟢 System Status: ACTIVE</h2>
+<p>🤖 AI Monitoring: ON</p>
+<p>📡 Landslide Monitoring: ACTIVE</p>
+<p>🚨 Early Warning System: READY</p>
+</div>
+
+<div class="box">
+<h2>📍 Risk Detection</h2>
+
+<label>Rainfall (mm)</label>
+<input type="number" id="rainfall" value="120">
+
+<label>Slope (degrees)</label>
+<input type="number" id="slope" value="35">
+
+<label>Soil Moisture (%)</label>
+<input type="number" id="moisture" value="70">
+
+<button type="button" onclick="checkRisk()">
+Check Landslide Risk
+</button>
+
+<div id="result"></div>
+<div id="warning"></div>
+</div>
+
+<div class="box">
+<h2>📊 Risk Dashboard</h2>
+
+<p>🌧️ Rainfall: <b id="dashRainfall">120 mm</b></p>
+<p>⛰️ Slope: <b id="dashSlope">35°</b></p>
+<p>💧 Soil Moisture: <b id="dashMoisture">70%</b></p>
+<p>🚨 Current Risk: <b id="dashRisk">HIGH</b></p>
+</div>
+
+<div class="box">
+<h2>🚨 Emergency Alert</h2>
+
+<p id="emergencyStatus">
+⚠️ Monitoring landslide conditions...
+</p>
+
+<p>📍 High-risk area: Chikkamagaluru</p>
+
+<p>
+🛡️ Safety Action: Avoid steep slopes and move to a safe location during heavy rainfall.
+</p>
+</div>
+
+<div class="box">
+<h2>📍 Monitored Risk Locations</h2>
+
+<p>🔴 <b>Chikkamagaluru</b> — HIGH RISK</p>
+<p>🟠 <b>Shivamogga</b> — MEDIUM RISK</p>
+<p>🟢 <b>Chitradurga</b> — LOW RISK</p>
+</div>
+
+<div class="box">
+<h2>🗺️ Landslide Risk Map</h2>
+
+<button type="button" onclick="selectMapLocation()">
+📍 Select Location on Map
+</button>
+
+<p id="locationStatus">
+👆 Tap the map to select a location.
+</p>
+
+<div id="map"></div>
+
+<div style="margin-top:15px; padding:10px; background:#f4f6f8; border-radius:10px;">
+
+<b>🗺️ Risk Legend</b>
+
+<p>🔴 HIGH — Immediate warning</p>
+<p>🟠 MEDIUM — Monitor conditions</p>
+<p>🟢 LOW — Relatively stable</p>
+
+</div>
+</div>
+
+<div class="box">
+<h2>🗺️ Risk Map Controls</h2>
+
+<button type="button" onclick="goChikka()">
+🔴 Go to Chikkamagaluru
+</button>
+
+<button type="button" onclick="goShivamogga()">
+🟠 Go to Shivamogga
+</button>
+
+<button type="button" onclick="goChitradurga()">
+🟢 Go to Chitradurga
+</button>
+
+<button type="button" onclick="viewAll()">
+🌐 View All Locations
+</button>
+
+<p id="mapStatus">Select a location above.</p>
+</div>
+
+<div class="box">
+<h2>🧠 AI Risk Analysis</h2>
+
+<p>
+The system analyzes current environmental conditions
+to estimate landslide risk.
+</p>
+
+<button type="button" id="aiButton" onclick="analyzeAI()">
+🤖 Run AI Risk Analysis
+</button>
+
+<p id="prediction">
+📊 AI analysis is ready.
+</p>
+
+<p id="aiStatus"></p>
+
+</div>
+
+<div class="box">
+<h2>🔄 How GeoGuard-NER Works</h2>
+
+<p>1️⃣ Collect Environmental Data</p>
+<p>2️⃣ Analyze Rainfall, Slope & Soil Moisture</p>
+<p>3️⃣ Calculate Landslide Risk</p>
+<p>4️⃣ Identify HIGH / MEDIUM / LOW Risk</p>
+<p>5️⃣ Generate Early Warning Alert</p>
+<p>6️⃣ Display Risk on GIS Map</p>
+</div>
+
+<div class="box">
+<h2>🛡️ Safety Recommendations</h2>
+
+<p>🚨 HIGH RISK: Evacuate the area and move to a safe location.</p>
+
+<p>⚠️ MEDIUM RISK: Avoid steep slopes and monitor weather conditions.</p>
+
+<p>✅ LOW RISK: Continue normal activities but remain alert.</p>
+
+<p>📞 In an emergency, contact local disaster management authorities.</p>
+</div>
+
+<div class="box">
+<h2>📈 Risk Trend</h2>
+
+<p>Recent environmental risk levels:</p>
+
+<p>Day 1 — 🟢 25%</p>
+<div style="width:25%; height:20px; background:green; border-radius:10px;"></div>
+
+<p>Day 2 — 🟢 35%</p>
+<div style="width:35%; height:20px; background:green; border-radius:10px;"></div>
+
+<p>Day 3 — 🟠 45%</p>
+<div style="width:45%; height:20px; background:orange; border-radius:10px;"></div>
+
+<p>Day 4 — 🟠 70%</p>
+<div style="width:70%; height:20px; background:orange; border-radius:10px;"></div>
+
+<p>Today — 🔴 85%</p>
+<div style="width:85%; height:20px; background:red; border-radius:10px;"></div>
+
+</div>
+
+<div class="box">
+<h2>📡 Live Monitoring</h2>
+
+<p>🌧️ Rainfall Sensor: <b>ACTIVE</b></p>
+<p>⛰️ Slope Monitoring: <b>ACTIVE</b></p>
+<p>💧 Soil Moisture Sensor: <b>ACTIVE</b></p>
+<p>🛰️ GIS Monitoring: <b>ACTIVE</b></p>
+<p>🚨 Early Warning: <b>READY</b></p>
+</div>
+
+<div class="box">
+<h2>📊 Risk Statistics</h2>
+
+<p>📍 Total Monitored Locations: <b>3</b></p>
+<p>🔴 High Risk Locations: <b>1</b></p>
+<p>🟠 Medium Risk Locations: <b>1</b></p>
+<p>🟢 Low Risk Locations: <b>1</b></p>
+<p>🚨 Active Warnings: <b>1</b></p>
+</div>
+
+<div class="box">
+<h2>🚨 Emergency Contact</h2>
+
+<p>📞 <b>District Disaster Management:</b> 1077</p>
+<p>📞 <b>Emergency Services:</b> 112</p>
+<p>🏥 <b>Medical Emergency:</b> 108</p>
+
+<p>
+⚠️ In case of a landslide warning, immediately move
+away from steep slopes and follow local authority instructions.
+</p>
+</div>
+
+<div class="box">
+<h2>🌦️ Environmental Conditions</h2>
+
+<p>🌧️ Rainfall: <b>120 mm</b></p>
+<p>💧 Soil Moisture: <b>70%</b></p>
+<p>⛰️ Slope: <b>35°</b></p>
+<p>🌡️ Temperature: <b>24°C</b></p>
+<p>💨 Weather Status: <b>Heavy Rainfall</b></p>
+
+<p>
+⚠️ <b>Environmental conditions require continuous monitoring.</b>
+</p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+
+/* =========================
+   RISK DETECTION
+========================= */
+
+function checkRisk() {
+
+    var rainfall =
+    Number(document.getElementById("rainfall").value);
+
+    var slope =
+    Number(document.getElementById("slope").value);
+
+    var moisture =
+    Number(document.getElementById("moisture").value);
+
+    var risk = "LOW";
+
+    var riskScore =
+        (rainfall / 2) +
+        (slope * 1.5) +
+        (moisture * 0.5);
+
+    if (riskScore > 100) {
+        riskScore = 100;
+    }
+
+    if (
+        rainfall >= 100 &&
+        slope >= 30 &&
+        moisture >= 60
+    ) {
+
+        risk = "HIGH";
+
+    } else if (
+        rainfall >= 60 ||
+        slope >= 25 ||
+        moisture >= 50
+    ) {
+
+        risk = "MEDIUM";
+    }
+
+    document.getElementById("result").innerHTML =
+        "🚨 Risk Assessment: " + risk;
+
+    document.getElementById("dashRainfall").innerHTML =
+        rainfall + " mm";
+
+    document.getElementById("dashSlope").innerHTML =
+        slope + "°";
+
+    document.getElementById("dashMoisture").innerHTML =
+        moisture + "%";
+
+    document.getElementById("dashRisk").innerHTML =
+        risk;
+
+    if (risk === "HIGH") {
+
+        
+        document.getElementById("warning").innerHTML =
+        "🚨 HIGH LANDSLIDE RISK<br>" +
+        "Heavy rainfall, steep slope and high soil moisture detected.<br>" +
+        "<b>⚠️ EARLY WARNING ALERT: Avoid high-risk areas and move to a safe location.</b>";
+
+        document.getElementById("emergencyStatus").innerHTML =
+        "🚨 HIGH ALERT: Landslide risk is high. Immediate precaution is recommended.";
+
+    } else if (risk === "MEDIUM") {
+
+        
+        document.getElementById("warning").innerHTML =
+        "⚠️ MEDIUM LANDSLIDE RISK<br>" +
+        "Monitor rainfall and ground conditions.";
+
+        document.getElementById("emergencyStatus").innerHTML =
+        "⚠️ MEDIUM ALERT: Continue monitoring rainfall and ground conditions.";
+
+    } else {
+
+        
+        document.getElementById("warning").innerHTML =
+        "✅ LOW LANDSLIDE RISK<br>" +
+        "Current conditions are relatively stable.";
+
+        document.getElementById("emergencyStatus").innerHTML =
+        "✅ LOW ALERT: Conditions are relatively stable.";
+    }
+}
+
+
+/* =========================
+   MAP
+========================= */
+var selectedMarker = null;
+var selectionMode = false;
+var map = L.map("map").setView(
+    [14.2251, 76.3980],
+    7
+);
+
+L.tileLayer(
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    {
+        attribution:
+        "&copy; OpenStreetMap contributors"
+    }
+).addTo(map);
+
+
+/* =========================
+   GEOJSON DATA
+========================= */
+
+var geojsonData = {
+
+    "type": "FeatureCollection",
+
+    "features": [
+
+        {
+            "type": "Feature",
+
+            "properties": {
+                "name": "Chikkamagaluru",
+                "risk": "HIGH",
+                "rainfall": 120,
+                "slope": 35,
+                "soilMoisture": 70
+            },
+
+            "geometry": {
+                "type": "Point",
+                "coordinates": [75.7720, 13.3409]
+            }
+        },
+
+        {
+            "type": "Feature",
+
+            "properties": {
+                "name": "Shivamogga",
+                "risk": "MEDIUM",
+                "rainfall": 75,
+                "slope": 27,
+                "soilMoisture": 55
+            },
+
+            "geometry": {
+                "type": "Point",
+                "coordinates": [75.5600, 13.9500]
+            }
+        },
+
+        {
+            "type": "Feature",
+
+            "properties": {
+                "name": "Chitradurga",
+                "risk": "LOW",
+                "rainfall": 35,
+                "slope": 12,
+                "soilMoisture": 30
+            },
+
+            "geometry": {
+                "type": "Point",
+                "coordinates": [76.3980, 14.2251]
+            }
+        }
+
+    ]
+};
+
+
+/* =========================
+   RISK COLORS
+========================= */
+
+function getColor(risk) {
+
+    if (risk === "HIGH") {
+        return "red";
+    }
+
+    if (risk === "MEDIUM") {
+        return "orange";
+    }
+
+    return "green";
+}
+
+
+/* =========================
+   DISPLAY LOCATIONS
+========================= */
+
+var riskLayer = L.geoJSON(
+    geojsonData,
+    {
+
+        pointToLayer:
+        function(feature, latlng) {
+
+            return L.circleMarker(
+                latlng,
+                {
+                    radius: 12,
+
+                    color:
+                    getColor(
+                        feature.properties.risk
+                    ),
+
+                    fillColor:
+                    getColor(
+                        feature.properties.risk
+                    ),
+
+                    fillOpacity: 0.7
+                }
+            );
+        },
+
+        onEachFeature:
+        function(feature, layer) {
+
+            layer.bindPopup(
+
+                "<b>" +
+                feature.properties.name +
+                "</b><br>" +
+
+                "Risk: " +
+                feature.properties.risk +
+                "<br>" +
+
+                "Rainfall: " +
+                feature.properties.rainfall +
+                " mm<br>" +
+
+                "Slope: " +
+                feature.properties.slope +
+                "°<br>" +
+
+                "Soil Moisture: " +
+                feature.properties.soilMoisture +
+                "%"
+            );
+        }
+    }
+).addTo(map);
+
+
+/* =========================
+   MAP CONTROL BUTTONS
+========================= */
+
+function goChikka() {
+
+    map.setView(
+        [13.3409, 75.7720],
+        12
+    );
+
+    document.getElementById("mapStatus").innerHTML =
+        "🔴 Showing Chikkamagaluru — HIGH RISK";
+}
+
+
+function goShivamogga() {
+
+    map.setView(
+        [13.9500, 75.5600],
+        12
+    );
+
+    document.getElementById("mapStatus").innerHTML =
+        "🟠 Showing Shivamogga — MEDIUM RISK";
+}
+
+
+function goChitradurga() {
+
+    map.setView(
+        [14.2251, 76.3980],
+        12
+    );
+
+    document.getElementById("mapStatus").innerHTML =
+        "🟢 Showing Chitradurga — LOW RISK";
+}
+
+
+function viewAll() {
+
+    map.fitBounds(
+        riskLayer.getBounds(),
+        {
+            padding: [30, 30]
+        }
+    );
+
+    document.getElementById("mapStatus").innerHTML =
+        "🌐 Showing all monitored locations";
+}
+
+
+/* =========================
+   CURRENT LOCATION
+========================= */
+
+  function selectMapLocation() {
+    if (!map) {
+        alert("Map is not ready. Please wait a moment and try again.");
+        return;
+    }
+
+    selectionMode = true;
+
+    alert("Now tap anywhere on the map to select a location.");
+
+    map.once("click", function (e) {
+
+        const lat = e.latlng.lat;
+        const lng = e.latlng.lng;
+
+        // Remove previous selected marker
+        if (selectedMarker) {
+            map.removeLayer(selectedMarker);
+        }
+
+        // Create new marker at selected location
+        selectedMarker = L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup(
+                "<b>Selected Location</b><br>" +
+                "Latitude: " + lat.toFixed(5) + "<br>" +
+                "Longitude: " + lng.toFixed(5)
+            )
+            .openPopup();
+
+        // Find nearest monitored location
+        let nearestLocation = null;
+        let nearestDistance = Infinity;
+
+        const locations = [
+            {
+                name: "Chikkamagaluru",
+                lat: 13.3409,
+                lng: 75.7720,
+                risk: "HIGH",
+                rainfall: 120,
+                slope: 35,
+                moisture: 70
+            },
+            {
+                name: "Shivamogga",
+                lat: 13.9500,
+                lng: 75.5600,
+                risk: "MEDIUM",
+                rainfall: 80,
+                slope: 27,
+                moisture: 55
+            },
+            {
+                name: "Chitradurga",
+                lat: 14.2251,
+                lng: 76.3980,
+                risk: "LOW",
+                rainfall: 30,
+                slope: 15,
+                moisture: 30
+            }
+        ];
+
+        locations.forEach(function(location) {
+
+            const distance =
+                Math.sqrt(
+                    Math.pow(lat - location.lat, 2) +
+                    Math.pow(lng - location.lng, 2)
+                );
+
+            if (distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestLocation = location;
+            }
+        });
+
+        // Fill the input values using nearest monitored location
+        if (nearestLocation) {
+
+            document.getElementById("rainfall").value =
+                nearestLocation.rainfall;
+
+            document.getElementById("slope").value =
+                nearestLocation.slope;
+
+            document.getElementById("moisture").value =
+    nearestLocation.moisture;
+          
+            // Show selected location
+            const locationText =
+                document.getElementById("locationStatus")
+
+            if (locationText) {
+                locationText.innerHTML =
+                    "📍 Selected: <b>" +
+                    nearestLocation.name +
+                    "</b>";
+            }
+
+            // Calculate risk
+            checkRisk();
+
+            alert(
+                "Location selected near " +
+                nearestLocation.name +
+                "\nRisk: " +
+                nearestLocation.risk
+            );
+        }
+
+        selectionMode = false;
+    });
+  }
+         
+  
+          
+
+/* =========================
+   INITIAL RISK CHECK
+========================= */
+
+checkRisk();
+function analyzeAI() {
+
+    var rainfall =
+        Number(document.getElementById("rainfall").value);
+
+    var slope =
+        Number(document.getElementById("slope").value);
+
+    var moisture =
+        Number(document.getElementById("moisture").value);
+
+    var prediction =
+        document.getElementById("prediction");
+
+    var aiStatus =
+        document.getElementById("aiStatus");
+
+    if (
+        isNaN(rainfall) ||
+        isNaN(slope) ||
+        isNaN(moisture)
+    ) {
+
+        prediction.innerHTML =
+            "❌ Please enter valid environmental values.";
+
+        return;
+    }
+
+    var rainfallScore =
+        Math.min(rainfall / 150, 1) * 40;
+
+    var slopeScore =
+        Math.min(slope / 45, 1) * 35;
+
+    var moistureScore =
+        Math.min(moisture / 100, 1) * 25;
+
+    var totalScore =
+        rainfallScore +
+        slopeScore +
+        moistureScore;
+
+    var risk;
+    var probability;
+
+    if (totalScore >= 70) {
+
+        risk = "HIGH";
+        probability = Math.round(totalScore);
+
+    } else if (totalScore >= 45) {
+
+        risk = "MEDIUM";
+        probability = Math.round(totalScore);
+
+    } else {
+
+        risk = "LOW";
+        probability = Math.round(totalScore);
+    }
+
+    if (probability > 99) {
+        probability = 99;
+    }
+
+    if (risk === "HIGH") {
+
+        prediction.innerHTML =
+            "🔴 AI Risk Analysis: <b>HIGH</b><br>" +
+            "Estimated risk level: <b>" +
+            probability +
+            "%</b><br><br>" +
+            "⚠️ Environmental conditions indicate elevated landslide risk.";
+
+    } else if (risk === "MEDIUM") {
+
+        prediction.innerHTML =
+            "🟠 AI Risk Analysis: <b>MEDIUM</b><br>" +
+            "Estimated risk level: <b>" +
+            probability +
+            "%</b><br><br>" +
+            "⚠️ Continuous monitoring is recommended.";
+
+    } else {
+
+        prediction.innerHTML =
+            "🟢 AI Risk Analysis: <b>LOW</b><br>" +
+            "Estimated risk level: <b>" +
+            probability +
+            "%</b><br><br>" +
+            "✅ Current conditions appear relatively stable.";
+    }
+
+    aiStatus.innerHTML =
+        "✓ Analysis completed successfully.";
+}
+
+</script>
+</body>
+</html>
